@@ -1,129 +1,89 @@
-import fs from "fs";
-import path from "path";
-import electron from "electron";
-import {spawn} from "child_process";
+/**
+ * @name Misaka Mikoto
+ * @author ClearVision Team
+ * @version 6.9.0
+ * @description Highly customizable and beautiful theme for BetterDiscord.
+ * @source https://github.com/ClearVision/ClearVision-v6
+ * @website https://clearvision.github.io
+ * @invite dHaSxn3
+ * @BDEditor Clear Vision
+*/
 
-import ReactDevTools from "./reactdevtools";
-import * as IPCEvents from "common/constants/ipcevents";
+@import url('https://clearvision.github.io/ClearVision-v6/main.css');
 
-// Build info file only exists for non-linux (for current injection)
-const appPath = electron.app.getAppPath();
-const buildInfoFile = path.resolve(appPath, "..", "build_info.json");
-
-// Locate data path to find transparency settings
-let dataPath = "";
-if (process.platform === "win32" || process.platform === "darwin") dataPath = path.join(electron.app.getPath("userData"), "..");
-else dataPath = process.env.XDG_CONFIG_HOME ? process.env.XDG_CONFIG_HOME : path.join(process.env.HOME, ".config"); // This will help with snap packages eventually
-dataPath = path.join(dataPath, "BetterDiscord") + "/";
-
-let hasCrashed = false;
-export default class BetterDiscord {
-    static getWindowPrefs() {
-        if (!fs.existsSync(buildInfoFile)) return {};
-        const buildInfo = __non_webpack_require__(buildInfoFile);
-        const prefsFile = path.resolve(dataPath, "data", buildInfo.releaseChannel, "windowprefs.json");
-        if (!fs.existsSync(prefsFile)) return {};
-        return __non_webpack_require__(prefsFile);
-    }
-
-    static getSetting(category, key) {
-        if (this._settings) return this._settings[category]?.[key];
-
-        try {
-            const buildInfo = __non_webpack_require__(buildInfoFile);
-            const settingsFile = path.resolve(dataPath, "data", buildInfo.releaseChannel, "settings.json");
-            this._settings = __non_webpack_require__(settingsFile) ?? {};
-            return this._settings[category]?.[key];
-        }
-        catch (_) {
-            this._settings = {};
-            return this._settings[category]?.[key];
-        }
-    }
-
-    static ensureDirectories() {
-        if (!fs.existsSync(dataPath)) fs.mkdirSync(dataPath);
-        if (!fs.existsSync(path.join(dataPath, "plugins"))) fs.mkdirSync(path.join(dataPath, "plugins"));
-        if (!fs.existsSync(path.join(dataPath, "themes"))) fs.mkdirSync(path.join(dataPath, "themes"));
-    }
-
-    static async injectRenderer(browserWindow) {
-        const location = path.join(__dirname, "renderer.js");
-        if (!fs.existsSync(location)) return; // TODO: cut a fatal log
-        const content = fs.readFileSync(location).toString();
-        const success = await browserWindow.webContents.executeJavaScript(`
-            (() => {
-                try {
-                    ${content}
-                    return true;
-                } catch(error) {
-                    console.error(error);
-                    return false;
-                }
-            })();
-            //# sourceURL=betterdiscord/renderer.js
-        `);
-
-        if (!success) return; // TODO: cut a fatal log
-    }
-
-    static setup(browserWindow) {
-
-        // Setup some useful vars to avoid blocking IPC calls
-        try {
-            process.env.DISCORD_RELEASE_CHANNEL = __non_webpack_require__(buildInfoFile).releaseChannel;
-        }
-        catch (e) {
-            process.env.DISCORD_RELEASE_CHANNEL = "stable";
-        }
-        process.env.DISCORD_PRELOAD = browserWindow.__originalPreload;
-        process.env.DISCORD_APP_PATH = appPath;
-        process.env.DISCORD_USER_DATA = electron.app.getPath("userData");
-        process.env.BETTERDISCORD_DATA_PATH = dataPath;
-
-        // When DOM is available, pass the renderer over the wall
-        browserWindow.webContents.on("dom-ready", () => {
-            if (!hasCrashed) return this.injectRenderer(browserWindow);
-
-            // If a previous crash was detected, show a message explaining why BD isn't there
-            electron.dialog.showMessageBox({
-                title: "Discord Crashed",
-                type: "warning",
-                message: "Something crashed your Discord Client",
-                detail: "BetterDiscord has automatically disabled itself just in case. To enable it again, restart Discord or click the button below.\n\nThis may have been caused by a plugin. Try moving all of your plugins outside the plugin folder and see if Discord still crashed.",
-                buttons: ["Try Again", "Open Plugins Folder", "Cancel"],
-            }).then((result)=>{
-                if (result.response === 0) {
-                    electron.app.relaunch();
-                    electron.app.exit();
-                }
-                if (result.response === 1) {
-                    if (process.platform === "win32") spawn("explorer.exe", [path.join(dataPath, "plugins")]);
-                    else electron.shell.openPath(path.join(dataPath, "plugins"));
-                }
-            });
-            hasCrashed = false;
-        });
-
-        // This is used to alert renderer code to onSwitch events
-        browserWindow.webContents.on("did-navigate-in-page", () => {
-            browserWindow.webContents.send(IPCEvents.NAVIGATE);
-        });
-
-        browserWindow.webContents.on("render-process-gone", () => {
-            hasCrashed = true;
-        });
-    }
-
-    static disableMediaKeys() {
-        if (!BetterDiscord.getSetting("general", "mediaKeys")) return;
-        const originalDisable = electron.app.commandLine.getSwitchValue("disable-features") || "";
-        electron.app.commandLine.appendSwitch("disable-features", `${originalDisable ? "," : ""}HardwareMediaKeyHandling,MediaSessionService`);
-    }
+:root {
+  --main-color: #00E2FF;
+  --hover-color: #00BCD4;
+  --success-color: #00E2FF;
+  --danger-color: #0027FF;
+  --url-color: #00E2FF;
+  --background-image: url('https://i.imgur.com/PQEybpR.jpeg');
+  --background-shading: 50%;
+  --background-position: center;
+  --background-size: contain;
+  --background-repeat: repeat;
+  --background-attachment: scroll;
+  --background-brightness: 100%;
+  --background-contrast: 100%;
+  --background-saturation: 105%;
+  --background-grayscale: 0%;
+  --background-invert: 0%;
+  --background-blur: 0px;
+  --background-overlay: rgb(0,0,0,0.31);
+  --user-popout-image: url('https://clearvision.github.io/images/sapphire.jpg');
+  --user-popout-position: center;
+  --user-popout-size: cover;
+  --user-popout-repeat: no-repeat;
+  --user-popout-attachment: fixed;
+  --user-popout-brightness: 74%;
+  --user-popout-contrast: 100%;
+  --user-popout-saturation: 100%;
+  --user-popout-grayscale: 0%;
+  --user-popout-invert: 0%;
+  --user-popout-blur: 0px;
+  --user-modal-image: url('https://clearvision.github.io/images/sapphire.jpg');
+  --user-modal-position: center;
+  --user-modal-size: cover;
+  --user-modal-repeat: no-repeat;
+  --user-modal-attachment: fixed;
+  --user-modal-brightness: 100%;
+  --user-modal-contrast: 100%;
+  --user-modal-saturation: 100%;
+  --user-modal-grayscale: 0%;
+  --user-modal-invert: 0%;
+  --user-modal-blur: 3px;
+  --home-icon: url('https://clearvision.github.io/icons/discord.svg');
+  --home-position: center;
+  --home-size: 40px;
+  --channel-unread: #FFFFFF;
+  --channel-color: rgb(255,255,255,1);
+  --muted-color: rgb(0,255,231,1);
+  --online-color: #0027FF;
+  --idle-color: #0027FF;
+  --dnd-color: #0027FF;
+  --streaming-color: #0027FF;
+  --offline-color: #0027FF;
+  --main-font: gg sans;
+  --code-font: Consolas;
+  --channels-width: 220px;
+  --members-width: 240px;
+  --backdrop-overlay: rgba(0,0,0,0.8);
+  --backdrop-image: var(--background-image);
+  --backdrop-position: var(--background-position);
+  --backdrop-size: var(--background-size);
+  --backdrop-repeat: var(--background-repeat);
+  --backdrop-attachment: var(--background-attachment);
+  --backdrop-brightness: var(--background-brightness);
+  --backdrop-contrast: var(--background-contrast);
+  --backdrop-saturation: var(--background-saturation);
+  --backdrop-invert: var(--background-invert);
+  --backdrop-grayscale: var(--background-grayscale);
+  --backdrop-sepia: var(--background-sepia);
+  --backdrop-blur: var(--background-blur);
+  --bd-blue: var(--main-color);
+  --bd-blue-hover: var(--hover-color);
+  --bd-blue-active: var(--hover-color);
 }
 
-if (BetterDiscord.getSetting("developer", "reactDevTools")) {
-    electron.app.whenReady().then(async ()=>{
-        await ReactDevTools.install(dataPath);
-    });
-}
+/* Any custom CSS below here */
+
